@@ -19,7 +19,7 @@ function Atualizar () {
     email: Yup.string().email('Digite um email válido'),
     cpf: Yup.string(),
     genre: Yup.string(),
-    birth: Yup.date().max(new Date().toLocaleDateString()),
+    birth: Yup.date().max(new Date()),
     cell_phone: Yup.string(),
     occupation: Yup.string(),
     street: Yup.string(),
@@ -71,9 +71,10 @@ function Atualizar () {
       console.log(err)
     }
 
-    setTimeout(() => {
-      push('list')
-    }, 2000)
+    console.log(customer.id)
+    // setTimeout(() => {
+    //   push('list')
+    // }, 2000)
   }
 
   return (

@@ -17,49 +17,63 @@ function Cadastro () {
     email: Yup.string().email('Digite um email válido').required('O email é obrigatório'),
     cpf: Yup.string().required('O CPF é obrigatório'),
     genre: Yup.string().required('O gênero é obrigatório'),
-    // birth: Yup.date().max(new Date().toLocaleDateString()).required('A data de nascimento é obrigatório'),
+    birth: Yup.date().max(new Date()).required(),
     cell_phone: Yup.string().required('O número de celular é obrigatório'),
     occupation: Yup.string(),
+    postal_code: Yup.string().required('O CEP é obrigatório'),
     street: Yup.string().required('A rua é obrigatório'),
     number: Yup.string().required('O número é obrigatório'),
     complement: Yup.string(),
     district: Yup.string().required('O bairro é obrigatório'),
     city: Yup.string().required('A cidade é obrigatório'),
     state: Yup.string().required('O estado é obrigatório'),
-    country: Yup.string().required('O país é obrigatório'),
-    postal_code: Yup.string().required('O CEP é obrigatório')
+    country: Yup.string().required('O país é obrigatório')
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue, setFocus } = useForm({
     resolver: yupResolver(schema)
   })
+
+  const checkCEP = (numberCEP) => {
+    const cep = numberCEP.target.value.replace(/\D/g, '')
+    fetch(`https://viacep.com.br/ws/${cep}/json/`).then(res => res.json()).then(data => {
+      setValue('street', data.logradouro)
+      setValue('district', data.bairro)
+      setValue('city', data.localidade)
+      setValue('state', data.uf)
+      setFocus('number')
+    })
+  }
 
   const onSubmit = async customerData => {
     try {
       const response = await api.post('customer', {
         name: customerData.name,
         email: customerData.email,
-        cpf: validarCPF(customerData.cpf) ? customerData.cpf : toast.error('CPF inválido'),
+        cpf: validarCPF(customerData.cpf) ? customerData.cpf.replace(/\D/g, '') : toast.error('CPF inválido'),
         genre: customerData.genre,
         birth: customerData.birth,
-        cell_phone: customerData.cell_phone,
+        cell_phone: customerData.cell_phone.replace(/\D/g, ''),
         occupation: customerData.occupation,
+        postal_code: customerData.postal_code.replace(/\D/g, ''),
         street: customerData.street,
         number: customerData.number,
         complement: customerData.complement,
         district: customerData.district,
         city: customerData.city,
         state: customerData.state,
-        country: customerData.country,
-        postal_code: customerData.postal_code
+        country: customerData.country
       }, { validateStatus: () => true })
 
       if (response.status === 201 || response.status === 200) {
         toast.success('Cadastro realizado com sucesso')
+        setTimeout(() => {
+          push('list')
+        }, 2000)
       } else if (response.status === 409) {
         toast.error('Usuário já cadastrado, por favor confirme novamente seus dados')
       } else if (response.status === 400) {
-        toast.error('Verifique seu número de telefone')
+        toast.error('Por favor, verifique seus dados!')
         console.log(response)
       } else {
         throw new Error()
@@ -68,10 +82,6 @@ function Cadastro () {
       toast.error('Falha no sistema, tente novamente')
       console.log(err)
     }
-
-    setTimeout(() => {
-      push('list')
-    }, 2000)
   }
 
   return (
@@ -106,6 +116,10 @@ function Cadastro () {
                 <Input placeholder='Ex.: Professor' type='text' {...register('occupation')}/>
                 <ErrorMessage>{errors.occupation?.message}</ErrorMessage>
 
+                <Label>Código Postal (CEP)</Label>
+                <Input placeholder='Ex.: 01233-445' type='text' {...register('postal_code')} onBlur={checkCEP} />
+                <ErrorMessage>{errors.postal_code?.message}</ErrorMessage>
+
                 <Label>Avenida / Rua</Label>
                 <Input placeholder='Ex.: Avenida 23 de maio' type='text' {...register('street')} />
                 <ErrorMessage>{errors.street?.message}</ErrorMessage>
@@ -133,10 +147,6 @@ function Cadastro () {
                 <Label>País</Label>
                 <Input placeholder='Ex.: Brasil' type='text' {...register('country')}/>
                 <ErrorMessage>{errors.country?.message}</ErrorMessage>
-
-                <Label>Código Postal (CEP)</Label>
-                <Input placeholder='Ex.: 01233445' type='number' {...register('postal_code')}/>
-                <ErrorMessage>{errors.postal_code?.message}</ErrorMessage>
 
                 <Button type='submit'>Enviar</Button>
             </form>

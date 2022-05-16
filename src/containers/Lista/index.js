@@ -8,16 +8,19 @@ import TableHead from '@mui/material/TableHead'
 // import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
 import api from '../../services/api'
-import { Container } from './styles'
-import formatDate from '../../utilities/formatDate'
+import { Container, Search } from './styles'
+import { formatDate, formatCPF, formatCellPhone, formatCEP } from '../../utilities/allFormats'
 import { Button } from '@mui/material'
-
 import { useHistory } from 'react-router-dom'
 
 function ShowAllCostumersAndUpdate () {
   const [customers, setCustomers] = useState([])
   const [rows, setRows] = useState([])
+  const [search, setsearch] = useState([])
   const { push } = useHistory()
+  const lowerSearch = search.toString().toLowerCase()
+
+  const filterRows = rows.filter((customer) => customer.name.toLowerCase().includes(lowerSearch))
 
   useEffect(() => {
     async function loadCustomers () {
@@ -60,10 +63,10 @@ function ShowAllCostumersAndUpdate () {
       id: customer.id,
       name: customer.name,
       email: customer.email,
-      cpf: customer.cpf,
+      cpf: formatCPF(customer.cpf),
       genre: customer.genre,
       birth: formatDate(customer.birth),
-      cellPhone: customer.cell_phone,
+      cellPhone: formatCellPhone(customer.cell_phone),
       occupation: customer.occupation,
       street: customer.street,
       number: customer.number,
@@ -72,7 +75,7 @@ function ShowAllCostumersAndUpdate () {
       city: customer.city,
       state: customer.state,
       country: customer.country,
-      postalCode: customer.postal_code,
+      postalCode: formatCEP(customer.postal_code),
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt,
       edit: <Button onClick={() => editCustomer(customer)} variant="contained">Editar</Button>
@@ -86,6 +89,7 @@ function ShowAllCostumersAndUpdate () {
 
   return (
     <Container>
+      <Search placeholder='Busque o nome do aluno' value={search} onChange={(event) => setsearch(event.target.value)} />
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
     <TableContainer sx={{ maxHeight: 440 }}>
       <Table stickyHeader aria-label="sticky table">
@@ -103,7 +107,7 @@ function ShowAllCostumersAndUpdate () {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows
+          {filterRows
             // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             .map((row, index) => {
               return (
