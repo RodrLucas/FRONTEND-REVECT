@@ -36,7 +36,7 @@ function Cadastro () {
 
   const checkCEP = (numberCEP) => {
     const cep = numberCEP.target.value.replace(/\D/g, '')
-    fetch(`https://viacep.com.br/ws/${cep}/json/`).then(res => res.json()).then(data => {
+    fetch(`https://viacep.com.br/ws/${cep}/json/`).then(res => res === null ? alert('CEP inválido') : res.json()).then(data => {
       setValue('street', data.logradouro)
       setValue('district', data.bairro)
       setValue('city', data.localidade)
@@ -97,7 +97,7 @@ function Cadastro () {
                 <ErrorMessage>{errors.email?.message}</ErrorMessage>
 
                 <Label>CPF</Label>
-                <Input placeholder='Ex.: 12345678910' type='text' {...register('cpf')}/>
+                <Input placeholder='Ex.: 12345678910' type='text' {...register('cpf')} pattern='[0-9]{11}'/>
                 <ErrorMessage>{errors.cpf?.message}</ErrorMessage>
 
                 <Label>Gênero</Label>
