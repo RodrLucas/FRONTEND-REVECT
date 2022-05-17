@@ -1,5 +1,4 @@
 // // Método para validar se um CPF é válido
-
 function validarCPF (cpf) {
   let add = 0
   let rev = 0

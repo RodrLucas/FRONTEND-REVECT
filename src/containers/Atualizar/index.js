@@ -12,8 +12,6 @@ import { useHistory } from 'react-router-dom'
 function Atualizar () {
   const { push, location: { state: { customer } } } = useHistory()
 
-  console.log(customer)
-
   const schema = Yup.object().shape({
     name: Yup.string(),
     email: Yup.string().email('Digite um email válido'),
@@ -22,42 +20,56 @@ function Atualizar () {
     birth: Yup.date().max(new Date()),
     cell_phone: Yup.string(),
     occupation: Yup.string(),
+    postal_code: Yup.string(),
     street: Yup.string(),
     number: Yup.string(),
     complement: Yup.string(),
     district: Yup.string(),
     city: Yup.string(),
     state: Yup.string(),
-    country: Yup.string(),
-    postal_code: Yup.string()
+    country: Yup.string()
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue, setFocus } = useForm({
     resolver: yupResolver(schema)
   })
+
+  const checkCEP = (numberCEP) => {
+    const cep = numberCEP.target.value.replace(/\D/g, '')
+    fetch(`https://viacep.com.br/ws/${cep}/json/`).then(res => res === null ? alert('CEP inválido') : res.json()).then(data => {
+      setValue('street', data.logradouro)
+      setValue('district', data.bairro)
+      setValue('city', data.localidade)
+      setValue('state', data.uf)
+      setFocus('number')
+    })
+  }
 
   const onSubmit = async customerData => {
     try {
       const response = await api.put(`customer/${customer.id}`, {
         name: customerData.name,
         email: customerData.email,
-        cpf: validarCPF(customerData.cpf) || customerData.cpf === '' ? customerData.cpf : toast.error('CPF inválido'),
+        cpf: validarCPF(customerData.cpf) ? customerData.cpf.replace(/\D/g, '') : toast.error('CPF inválido'),
         genre: customerData.genre,
         birth: customerData.birth,
-        cell_phone: customerData.cell_phone,
+        cell_phone: customerData.cell_phone.replace(/\D/g, ''),
         occupation: customerData.occupation,
+        postal_code: customerData.postal_code.replace(/\D/g, ''),
         street: customerData.street,
         number: customerData.number,
         complement: customerData.complement,
         district: customerData.district,
         city: customerData.city,
         state: customerData.state,
-        country: customerData.country,
-        postal_code: customerData.postal_code
+        country: customerData.country
       }, { validateStatus: () => true })
 
       if (response.status === 201 || response.status === 200) {
         toast.success('Cadastro realizado com sucesso')
+        setTimeout(() => {
+          push('list')
+        }, 2000)
       } else if (response.status === 409) {
         toast.error('Usuário já cadastrado, por favor confirme novamente seus dados')
       } else if (response.status === 400) {
@@ -70,11 +82,6 @@ function Atualizar () {
       toast.error('Falha no sistema, tente novamente')
       console.log(err)
     }
-
-    console.log(customer.id)
-    // setTimeout(() => {
-    //   push('list')
-    // }, 2000)
   }
 
   return (
@@ -109,6 +116,10 @@ function Atualizar () {
                 <Input placeholder='Ex.: Professor' type='text' {...register('occupation')} defaultValue={customer.occupation}/>
                 <ErrorMessage>{errors.occupation?.message}</ErrorMessage>
 
+                <Label>Código Postal (CEP)</Label>
+                <Input placeholder='Ex.: 01233445' type='number' {...register('postal_code')} nBlur={checkCEP} defaultValue={customer.postal_code}/>
+                <ErrorMessage>{errors.postal_code?.message}</ErrorMessage>
+
                 <Label>Avenida / Rua</Label>
                 <Input placeholder='Ex.: Avenida 23 de maio' type='text' {...register('street')} defaultValue={customer.street}/>
                 <ErrorMessage>{errors.street?.message}</ErrorMessage>
@@ -136,10 +147,6 @@ function Atualizar () {
                 <Label>País</Label>
                 <Input placeholder='Ex.: Brasil' type='text' {...register('country')} defaultValue={customer.country}/>
                 <ErrorMessage>{errors.country?.message}</ErrorMessage>
-
-                <Label>Código Postal (CEP)</Label>
-                <Input placeholder='Ex.: 01233445' type='number' {...register('postal_code')} defaultValue={customer.postal_code}/>
-                <ErrorMessage>{errors.postal_code?.message}</ErrorMessage>
 
                 <Button type='submit'>Entrar</Button>
             </form>
