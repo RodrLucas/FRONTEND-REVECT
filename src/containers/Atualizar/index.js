@@ -66,7 +66,7 @@ function Atualizar () {
       }, { validateStatus: () => true })
 
       if (response.status === 201 || response.status === 200) {
-        toast.success('Cadastro realizado com sucesso')
+        toast.success('Atualização realizada com sucesso')
         setTimeout(() => {
           push('list')
         }, 2000)
